@@ -52,7 +52,7 @@ var (
 // WebService handles the HTTP endpoints with the exception of /api.
 type WebService struct {
 	QuitChan chan struct{}
-	router   route.Router
+	router   *route.Router
 }
 
 type WebServiceOptions struct {
@@ -95,9 +95,13 @@ func NewWebService(o *WebServiceOptions) *WebService {
 	// mux.Handle(o.PathPrefix+"/consoles/", prometheus.InstrumentHandler(
 	// 	o.PathPrefix+"/consoles/", http.StripPrefix(o.PathPrefix+"/consoles/", o.ConsolesHandler),
 	// ))
-	router.GET(ctx context.Context, "/graph", prometheus.InstrumentHandler(
-		o.PathPrefix+"/graph", o.GraphsHandler,
-	))
+	// router.GET("/graph", prometheus.InstrumentHandler(
+	// 	o.PathPrefix+"/graph", o.GraphsHandler,
+	// ))
+
+	router.GET("/graph", func(w http.ResponseWriter, req *http.Request, ctx context.Context) {
+		prometheus.InstrumentHandler(o.PathPrefix+"/graph", o.GraphsHandler).ServeHTTP(w, req)
+	})
 	// mux.Handle(o.PathPrefix+"/heap", prometheus.InstrumentHandler(
 	// 	o.PathPrefix+"/heap", http.HandlerFunc(dumpHeap),
 	// ))
@@ -133,7 +137,7 @@ func (ws *WebService) Run() {
 
 	// If we cannot bind to a port, retry after 30 seconds.
 	for {
-		err := http.ListenAndServe(*listenAddress, ws.mux)
+		err := http.ListenAndServe(*listenAddress, ws.router)
 		if err != nil {
 			log.Errorf("Could not listen on %s: %s", *listenAddress, err)
 		}
