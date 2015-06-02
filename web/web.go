@@ -28,6 +28,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/log"
+	"github.com/prometheus/prometheus/util/route"
+	"golang.org/x/net/context"
 
 	clientmodel "github.com/prometheus/client_golang/model"
 
@@ -50,7 +52,7 @@ var (
 // WebService handles the HTTP endpoints with the exception of /api.
 type WebService struct {
 	QuitChan chan struct{}
-	mux      *http.ServeMux
+	router   route.Router
 }
 
 type WebServiceOptions struct {
@@ -64,62 +66,63 @@ type WebServiceOptions struct {
 
 // NewWebService returns a new WebService.
 func NewWebService(o *WebServiceOptions) *WebService {
-	mux := http.NewServeMux()
+	router := route.New()
 
 	ws := &WebService{
-		mux:      mux,
+		router:   router,
 		QuitChan: make(chan struct{}),
 	}
+	router = router.WithPrefix(o.PathPrefix)
 
-	mux.HandleFunc("/", prometheus.InstrumentHandlerFunc(o.PathPrefix, func(rw http.ResponseWriter, req *http.Request) {
-		// The "/" pattern matches everything, so we need to check
-		// that we're at the root here.
-		if req.URL.Path == o.PathPrefix+"/" {
-			o.StatusHandler.ServeHTTP(rw, req)
-		} else if req.URL.Path == o.PathPrefix {
-			http.Redirect(rw, req, o.PathPrefix+"/", http.StatusFound)
-		} else if !strings.HasPrefix(req.URL.Path, o.PathPrefix+"/") {
-			// We're running under a prefix but the user requested something
-			// outside of it. Let's see if this page exists under the prefix.
-			http.Redirect(rw, req, o.PathPrefix+req.URL.Path, http.StatusFound)
-		} else {
-			http.NotFound(rw, req)
-		}
-	}))
-	mux.Handle(o.PathPrefix+"/alerts", prometheus.InstrumentHandler(
-		o.PathPrefix+"/alerts", o.AlertsHandler,
-	))
-	mux.Handle(o.PathPrefix+"/consoles/", prometheus.InstrumentHandler(
-		o.PathPrefix+"/consoles/", http.StripPrefix(o.PathPrefix+"/consoles/", o.ConsolesHandler),
-	))
-	mux.Handle(o.PathPrefix+"/graph", prometheus.InstrumentHandler(
+	// router.GET(ctx context.Context, "/", prometheus.InstrumentHandlerFunc(o.PathPrefix, func(rw http.ResponseWriter, req *http.Request) {
+	// 	// The "/" pattern matches everything, so we need to check
+	// 	// that we're at the root here.
+	// 	if req.URL.Path == o.PathPrefix+"/" {
+	// 		o.StatusHandler.ServeHTTP(rw, req)
+	// 	} else if req.URL.Path == o.PathPrefix {
+	// 		http.Redirect(rw, req, o.PathPrefix+"/", http.StatusFound)
+	// 	} else if !strings.HasPrefix(req.URL.Path, o.PathPrefix+"/") {
+	// 		// We're running under a prefix but the user requested something
+	// 		// outside of it. Let's see if this page exists under the prefix.
+	// 		http.Redirect(rw, req, o.PathPrefix+req.URL.Path, http.StatusFound)
+	// 	} else {
+	// 		http.NotFound(rw, req)
+	// 	}
+	// }))
+	// mux.Handle(o.PathPrefix+"/alerts", prometheus.InstrumentHandler(
+	// 	o.PathPrefix+"/alerts", o.AlertsHandler,
+	// ))
+	// mux.Handle(o.PathPrefix+"/consoles/", prometheus.InstrumentHandler(
+	// 	o.PathPrefix+"/consoles/", http.StripPrefix(o.PathPrefix+"/consoles/", o.ConsolesHandler),
+	// ))
+	router.GET(ctx context.Context, "/graph", prometheus.InstrumentHandler(
 		o.PathPrefix+"/graph", o.GraphsHandler,
 	))
-	mux.Handle(o.PathPrefix+"/heap", prometheus.InstrumentHandler(
-		o.PathPrefix+"/heap", http.HandlerFunc(dumpHeap),
-	))
+	// mux.Handle(o.PathPrefix+"/heap", prometheus.InstrumentHandler(
+	// 	o.PathPrefix+"/heap", http.HandlerFunc(dumpHeap),
+	// ))
 
-	o.MetricsHandler.RegisterHandler(mux, o.PathPrefix)
-	mux.Handle(o.PathPrefix+*metricsPath, prometheus.Handler())
-	if *useLocalAssets {
-		mux.Handle(o.PathPrefix+"/static/", prometheus.InstrumentHandler(
-			o.PathPrefix+"/static/", http.StripPrefix(o.PathPrefix+"/static/", http.FileServer(http.Dir("web/static"))),
-		))
-	} else {
-		mux.Handle(o.PathPrefix+"/static/", prometheus.InstrumentHandler(
-			o.PathPrefix+"/static/", http.StripPrefix(o.PathPrefix+"/static/", new(blob.Handler)),
-		))
-	}
+	// o.MetricsHandler.RegisterHandler(mux, o.PathPrefix)
+	// mux.Handle(o.PathPrefix+*metricsPath, prometheus.Handler())
+	// if *useLocalAssets {
+	// 	mux.Handle(o.PathPrefix+"/static/", prometheus.InstrumentHandler(
+	// 		o.PathPrefix+"/static/", http.StripPrefix(o.PathPrefix+"/static/", http.FileServer(http.Dir("web/static"))),
+	// 	))
+	// } else {
+	// 	mux.Handle(o.PathPrefix+"/static/", prometheus.InstrumentHandler(
+	// 		o.PathPrefix+"/static/", http.StripPrefix(o.PathPrefix+"/static/", new(blob.Handler)),
+	// 	))
+	// }
 
-	if *userAssetsPath != "" {
-		mux.Handle(o.PathPrefix+"/user/", prometheus.InstrumentHandler(
-			o.PathPrefix+"/user/", http.StripPrefix(o.PathPrefix+"/user/", http.FileServer(http.Dir(*userAssetsPath))),
-		))
-	}
+	// if *userAssetsPath != "" {
+	// 	mux.Handle(o.PathPrefix+"/user/", prometheus.InstrumentHandler(
+	// 		o.PathPrefix+"/user/", http.StripPrefix(o.PathPrefix+"/user/", http.FileServer(http.Dir(*userAssetsPath))),
+	// 	))
+	// }
 
-	if *enableQuit {
-		mux.Handle(o.PathPrefix+"/-/quit", http.HandlerFunc(ws.quitHandler))
-	}
+	// if *enableQuit {
+	// 	mux.Handle(o.PathPrefix+"/-/quit", http.HandlerFunc(ws.quitHandler))
+	// }
 
 	return ws
 }
