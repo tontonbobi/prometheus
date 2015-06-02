@@ -81,6 +81,7 @@ type prometheus struct {
 	ruleManager         *rules.Manager
 	targetManager       *retrieval.TargetManager
 	notificationHandler *notification.NotificationHandler
+	statusHandler       *web.PrometheusStatusHandler
 	storage             local.Storage
 	remoteStorageQueues []*remote.StorageQueueManager
 
@@ -189,25 +190,26 @@ func NewPrometheus() *prometheus {
 		QueryEngine: queryEngine,
 	}
 
-	webService := &web.WebService{
+	webService := web.NewWebService(&web.WebServiceOptions{
+		PathPrefix:      *pathPrefix,
 		StatusHandler:   prometheusStatus,
 		MetricsHandler:  metricsService,
 		ConsolesHandler: consolesHandler,
 		AlertsHandler:   alertsHandler,
 		GraphsHandler:   graphsHandler,
-	}
+	})
 
 	p := &prometheus{
 		queryEngine:         queryEngine,
 		ruleManager:         ruleManager,
 		targetManager:       targetManager,
 		notificationHandler: notificationHandler,
+		statusHandler:       prometheusStatus,
 		storage:             memStorage,
 		remoteStorageQueues: remoteStorageQueues,
 
 		webService: webService,
 	}
-	webService.QuitChan = make(chan struct{})
 
 	if !p.reloadConfig() {
 		os.Exit(1)
@@ -226,7 +228,7 @@ func (p *prometheus) reloadConfig() bool {
 		return false
 	}
 
-	p.webService.StatusHandler.ApplyConfig(conf)
+	p.statusHandler.ApplyConfig(conf)
 	p.targetManager.ApplyConfig(conf)
 	p.ruleManager.ApplyConfig(conf)
 
@@ -267,7 +269,7 @@ func (p *prometheus) Serve() {
 
 	defer p.queryEngine.Stop()
 
-	go p.webService.ServeForever(*pathPrefix)
+	go p.webService.Run()
 
 	// Wait for reload or termination signals.
 	hup := make(chan os.Signal)
