@@ -52,7 +52,8 @@ GO      = $(GOENV) $(GOCC)
 GOFMT   = $(GOROOT)/bin/gofmt
 
 UNAME    := $(shell uname)
-SELFLINK  = $(GOPATH)/src/github.com/prometheus/prometheus
+REPO_PATH = github.com/prometheus/prometheus
+SELFLINK  = $(GOPATH)/src/$(REPO_PATH)
 
 export PREFIX=$(BUILD_PATH)/root
 
@@ -67,12 +68,12 @@ BRANCH     := $(shell git rev-parse --abbrev-ref HEAD)
 HOSTNAME   := $(shell hostname -f)
 BUILD_DATE := $(shell date +%Y%m%d-%H:%M:%S)
 BUILDFLAGS := -ldflags \
-  " -X main.buildVersion $(VERSION)\
-		-X main.buildRevision $(REV)\
-		-X main.buildBranch $(BRANCH)\
-		-X main.buildUser $(USER)@$(HOSTNAME)\
-		-X main.buildDate $(BUILD_DATE)\
-		-X main.goVersion $(GO_VERSION)"
+  " -X $(REPO_PATH)/cmd/promserv.buildVersion $(VERSION)\
+		-X $(REPO_PATH)/cmd/promserv.buildRevision $(REV)\
+		-X $(REPO_PATH)/cmd/promserv.buildBranch $(BRANCH)\
+		-X $(REPO_PATH)/cmd/promserv.buildUser $(USER)@$(HOSTNAME)\
+		-X $(REPO_PATH)/cmd/promserv.buildDate $(BUILD_DATE)\
+		-X $(REPO_PATH)/cmd/promserv.goVersion $(GO_VERSION)"
 PROTOC := protoc
 CURL := curl
 
