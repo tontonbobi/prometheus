@@ -53,6 +53,7 @@ type ConsulDiscovery struct {
 
 	mu                sync.RWMutex
 	services          map[string]*consulService
+	allServices       bool
 	runDone, srvsDone chan struct{}
 }
 
@@ -94,6 +95,9 @@ func NewConsulDiscovery(conf *config.ConsulSDConfig) *ConsulDiscovery {
 	}
 	for _, name := range conf.Services {
 		cd.scrapedServices[name] = struct{}{}
+		if name == "*" {
+			cd.allServices = true
+		}
 	}
 	return cd
 }
@@ -119,7 +123,7 @@ func (cd *ConsulDiscovery) Sources() []string {
 
 	srcs := make([]string, 0, len(srvs))
 	for name := range srvs {
-		if _, ok := cd.scrapedServices[name]; ok {
+		if _, ok := cd.scrapedServices[name]; cd.allServices || ok {
 			srcs = append(srcs, consulSourcePrefix+":"+name)
 		}
 	}
@@ -203,8 +207,10 @@ func (cd *ConsulDiscovery) watchServices(update chan<- *consulService) {
 		}
 		// Check for new services.
 		for name := range srvs {
-			if _, ok := cd.scrapedServices[name]; !ok {
-				continue
+			if !cd.allServices {
+				if _, ok := cd.scrapedServices[name]; !ok {
+					continue
+				}
 			}
 			srv, ok := cd.services[name]
 			if !ok {
