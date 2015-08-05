@@ -2,7 +2,7 @@ FROM        sdurrheimer/alpine-glibc
 MAINTAINER  The Prometheus Authors <prometheus-developers@googlegroups.com>
 
 RUN apk add --update -t build-deps make git \
-    && git clone git://github.com/jimmidyson/prometheus.git /app \
+    && git clone git://github.com/fabric8io/prometheus.git /app \
     && cd /app \
     && git checkout kubernetes-discovery \
     && make \
