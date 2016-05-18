@@ -4,7 +4,7 @@ MAINTAINER  The Prometheus Authors <prometheus-developers@googlegroups.com>
 WORKDIR /app
 COPY    . /app
 
-
+RUN opkg-install curl ca-certificates
 RUN apk --update upgrade && apk add curl ca-certificates
 RUN apk add --update -t build-deps git mercurial bzr make \
     && make build \
