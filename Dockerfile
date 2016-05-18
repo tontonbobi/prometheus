@@ -4,8 +4,7 @@ MAINTAINER  The Prometheus Authors <prometheus-developers@googlegroups.com>
 WORKDIR /app
 COPY    . /app
 
-RUN apk add --upgrade curl
-RUN apk add --upgrade ca-certificates 
+RUN apk add --update curl ca-certificates 
 RUN apk add --update -t build-deps git mercurial bzr make \
     && make build \
     && cp prometheus promtool /bin/ \
