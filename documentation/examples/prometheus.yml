@@ -135,5 +135,5 @@ scrape_configs:
   - job_name: "node"
       scrape_interval: "15s"
       target_groups:
-      - targets: ['devopsmon-kafka-node-2:9100','devopsmon-kafka-node-1:9100','devopsmon-kafka-node-0:9100','devopsmon-couchbase-node-1:9100','devopsmon-couchbase-node-0:9100','devopsmon-openshift-rbox-node-hgci:9100','devopsmon-openshift-rbox-node-0kd3:9100','devopsmon-openshift-rbox-master:9100']
+        - targets: ['devopsmon-kafka-node-2:9100','devopsmon-kafka-node-1:9100','devopsmon-kafka-node-0:9100','devopsmon-couchbase-node-1:9100','devopsmon-couchbase-node-0:9100','devopsmon-openshift-rbox-node-hgci:9100','devopsmon-openshift-rbox-node-0kd3:9100','devopsmon-openshift-rbox-master:9100']
 
