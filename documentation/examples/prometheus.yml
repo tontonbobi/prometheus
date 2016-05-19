@@ -89,6 +89,16 @@ scrape_configs:
       action: replace
       target_label: kubernetes_name
 
+      
+      
+  ###lalalaal    
+      
+  - job_name: 'node'
+      scrape_interval: '15s'
+      target_groups:
+      - targets: ['devopsmon-kafka-node-2:9100','devopsmon-kafka-node-1:9100','devopsmon-kafka-node-0:9100','devopsmon-couchbase-node-1:9100','devopsmon-couchbase-node-0:9100','devopsmon-openshift-rbox-node-hgci:9100','devopsmon-openshift-rbox-node-0kd3:9100','devopsmon-openshift-rbox-master:9100']    
+      
+  
   # Example scrape config for probing services via the Blackbox Exporter.
   #
   # The relabeling allows the actual service scrape endpoint to be configured
@@ -131,9 +141,6 @@ scrape_configs:
     - source_labels: [__meta_kubernetes_service_name]
       action: replace
       target_label: kubernetes_name
+
   
-  - job_name: 'node'
-      scrape_interval: '15s'
-      target_groups:
-      - targets: ['devopsmon-kafka-node-2:9100','devopsmon-kafka-node-1:9100','devopsmon-kafka-node-0:9100','devopsmon-couchbase-node-1:9100','devopsmon-couchbase-node-0:9100','devopsmon-openshift-rbox-node-hgci:9100','devopsmon-openshift-rbox-node-0kd3:9100','devopsmon-openshift-rbox-master:9100']
 
