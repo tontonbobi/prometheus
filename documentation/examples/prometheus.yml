@@ -1,4 +1,5 @@
 # my global config
+# this is my comment bebew  
 global:
   scrape_interval:     15s # By default, scrape targets every 15 seconds.
   evaluation_interval: 15s # By default, scrape targets every 15 seconds.
