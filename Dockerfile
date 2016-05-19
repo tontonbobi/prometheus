@@ -9,7 +9,7 @@ RUN apk add --update -t build-deps git mercurial bzr make \
     && make build \
     && cp prometheus promtool /bin/ \
     && mkdir -p /etc/prometheus \
-    && mv ./documentation/examples/basic.yml /etc/prometheus/prometheus.yml \
+    && mv ./documentation/examples/basic_nodes.yml /etc/prometheus/prometheus.yml \
     && mv ./console_libraries/ ./consoles/ /etc/prometheus/ \
     && apk del --purge build-deps \
     && rm -rf /app /var/cache/apk/*

@@ -1,5 +1,4 @@
 # my global config
-# this is my comment bebew  
 global:
   scrape_interval:     15s # By default, scrape targets every 15 seconds.
   evaluation_interval: 15s # By default, scrape targets every 15 seconds.
@@ -29,3 +28,8 @@ scrape_configs:
 
     target_groups:
       - targets: ['localhost:9090']
+
+- job_name: "node"
+    scrape_interval: "15s"
+    target_groups:
+    - targets: ['devopsmon-kafka-node-2:9100','devopsmon-kafka-node-1:9100','devopsmon-kafka-node-0:9100','devopsmon-couchbase-node-1:9100','devopsmon-couchbase-node-0:9100','devopsmon-openshift-rbox-node-hgci:9100','devopsmon-openshift-rbox-node-0kd3:9100','devopsmon-openshift-rbox-master:9100']
